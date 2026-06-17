@@ -11,7 +11,6 @@
          ============================================================ -->
     <style>
         /* ---------- FONT FACE ---------- */
-        /* Font per il nome "RICCARDO CLERICI" (e logo) */
         @font-face {
             font-family: 'TitleFont';
             src: url('fonts/title.ttf') format('truetype');
@@ -19,8 +18,6 @@
             font-style: normal;
             font-display: swap;
         }
-
-        /* Font per tutto il resto del testo */
         @font-face {
             font-family: 'BodyFont';
             src: url('fonts/body.ttf') format('truetype');
@@ -29,12 +26,12 @@
             font-display: swap;
         }
 
-        /* ---------- VARIABILI CSS ---------- */
+        /* ---------- VARIABILI CSS (con fallback retrò) ---------- */
         :root {
-            --title-font: 'TitleFont', 'Courier New', monospace;
-            --body-font: 'BodyFont', 'Georgia', serif;
+            /* Font: se non trovi i file .ttf, usa fallback in stile Analog Horror */
+            --title-font: 'TitleFont', 'Impact', 'Arial Black', sans-serif;
+            --body-font: 'BodyFont', 'Courier New', Courier, monospace;
 
-            /* colori (stile Analog Horror) */
             --bg: #0d0d0c;
             --sur: #141412;
             --sur2: #1c1c18;
@@ -47,16 +44,8 @@
             --glow: rgba(122, 154, 106, 0.15);
         }
 
-        /* ... resto del CSS ... */
-    </style>
-
-    <!-- Il resto dell'head (favicon, meta) rimane invariato -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%233a5a3a'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23c8b08a' font-family='Courier, monospace' font-weight='bold'%3ERC%3C/text%3E%3C/svg%3E" />
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%233a5a3a'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23c8b08a' font-family='Courier, monospace'%3ERC%3C/text%3E%3C/svg%3E" />
-
-    <style>
         /* ============================================================
-           RESET & BASE – stile Analog Horror anni 2000
+           RESET & BASE – stile Analog Horror anni 2000
            ============================================================ */
         *,
         *::before,
@@ -64,23 +53,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root {
-            --bg: #0d0d0c;
-            --sur: #141412;
-            --sur2: #1c1c18;
-            --acc: #7a9a6a;
-            --acc2: #b8a88a;
-            --txt: #c8c0b8;
-            --mut: #8a847a;
-            --brd: rgba(122, 154, 106, 0.25);
-            --red: #aa3a3a;
-            --glow: rgba(122, 154, 106, 0.15);
-
-            /* Font variables – modifica qui i nomi delle famiglie */
-            --title-font: 'TitleFont', 'Courier New', monospace;
-            --body-font: 'BodyFont', 'Georgia', serif;
         }
 
         html {
@@ -98,7 +70,7 @@
             overflow-x: hidden;
         }
 
-        /* ---------- overlay rumore / scanlines ---------- */
+        /* ---------- overlay rumore, scanline, vignetta ---------- */
         #noise-overlay {
             position: fixed;
             inset: 0;
@@ -159,7 +131,7 @@
             animation: flicker 6s infinite;
         }
 
-        /* ---------- cursore ---------- */
+        /* ---------- cursore personalizzato ---------- */
         #rc-cur {
             width: 10px;
             height: 10px;
@@ -378,12 +350,20 @@
         }
 
         .wf-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             width: 88%;
             height: 180px;
-            gap: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #scope {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: rgba(0, 10, 0, 0.4);
+            border: 1px solid var(--brd);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
         }
 
         .hlabel {
@@ -1010,6 +990,9 @@
             }
         }
     </style>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%233a5a3a'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23c8b08a' font-family='Courier, monospace' font-weight='bold'%3ERC%3C/text%3E%3C/svg%3E" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%233a5a3a'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23c8b08a' font-family='Courier, monospace'%3ERC%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
 
@@ -1044,7 +1027,9 @@
             </div>
         </div>
         <div class="hr">
-            <div class="wf-container" id="wf"></div>
+            <div class="wf-container">
+                <canvas id="scope"></canvas>
+            </div>
             <div class="hlabel">MILAN, IT · <span>OPEN TO WORK</span></div>
         </div>
     </section>
@@ -1241,30 +1226,83 @@
                 });
             }
 
-            // ---- wave ----
-            var wf = document.getElementById('wf');
-            if (wf) {
-                var bH = [18, 32, 52, 38, 68, 88, 62, 42, 78, 100, 72, 52, 84, 58, 38, 68, 92, 48, 28, 62, 80, 44, 60, 34, 74,
-                    52, 88, 40, 68, 48, 60, 78, 44, 34, 62, 50, 76, 30, 56, 85
-                ];
-                bH.forEach(function(h) {
-                    var b = document.createElement('div');
-                    b.style.cssText = 'width:6px;height:' + h +
-                        'px;background:#7a9a6a;border-radius:2px;flex-shrink:0;opacity:' + (0.2 + (h / 100) * 0.8) +
-                        ';display:block;box-shadow:0 0 8px rgba(122,154,106,0.2);';
-                    wf.appendChild(b);
-                });
-                var t = 0;
-                (function loopWave() {
-                    t += 0.035;
-                    var bars = wf.children;
-                    for (var i = 0; i < bars.length; i++) {
-                        var h = Math.max(4, bH[i] + Math.sin(t + i * 0.38) * 18 + Math.cos(t * 0.7 + i * 0.2) * 8);
-                        bars[i].style.height = h + 'px';
-                        bars[i].style.opacity = 0.2 + (h / 120) * 0.8;
+            // ---- oscilloscopio retrò (al posto delle barre) ----
+            var canvas = document.getElementById('scope');
+            if (canvas) {
+                var ctx = canvas.getContext('2d');
+                var rect = canvas.parentElement.getBoundingClientRect();
+                var width = rect.width;
+                var height = rect.height;
+                canvas.width = width;
+                canvas.height = height;
+
+                var phase = 0;
+
+                function drawScope() {
+                    // aggiorna dimensioni se cambia finestra
+                    rect = canvas.parentElement.getBoundingClientRect();
+                    if (width !== rect.width || height !== rect.height) {
+                        width = rect.width;
+                        height = rect.height;
+                        canvas.width = width;
+                        canvas.height = height;
                     }
-                    requestAnimationFrame(loopWave);
-                })();
+
+                    ctx.clearRect(0, 0, width, height);
+
+                    // griglia sottile (stile monitor retrò)
+                    ctx.strokeStyle = 'rgba(122, 154, 106, 0.07)';
+                    ctx.lineWidth = 0.5;
+                    for (var i = 0; i < height; i += 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, i);
+                        ctx.lineTo(width, i);
+                        ctx.stroke();
+                    }
+                    for (var i = 0; i < width; i += 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, 0);
+                        ctx.lineTo(i, height);
+                        ctx.stroke();
+                    }
+
+                    // linea dell'oscilloscopio (glow verde)
+                    ctx.strokeStyle = '#7a9a6a';
+                    ctx.lineWidth = 2.5;
+                    ctx.shadowColor = '#7a9a6a';
+                    ctx.shadowBlur = 18;
+                    ctx.beginPath();
+
+                    for (var x = 0; x < width; x++) {
+                        var y = height / 2
+                            + Math.sin(x * 0.04 + phase) * (height / 3.5)
+                            + Math.sin(x * 0.015 + phase * 1.4) * (height / 7)
+                            + Math.sin(x * 0.08 + phase * 0.6) * (height / 12);
+
+                        if (x === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+
+                    // glitch casuale (disturbo rosso, tipico horror)
+                    if (Math.random() < 0.015) {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = 'rgba(170, 58, 58, 0.4)';
+                        var glitchX = Math.random() * width;
+                        var glitchY = Math.random() * height;
+                        ctx.fillRect(glitchX, glitchY, 30 + Math.random() * 40, 2);
+
+                        if (Math.random() < 0.3) {
+                            ctx.fillStyle = 'rgba(200, 200, 200, 0.15)';
+                            ctx.fillRect(Math.random() * width, Math.random() * height, 60, 1);
+                        }
+                    }
+
+                    phase += 0.06;
+                    requestAnimationFrame(drawScope);
+                }
+
+                drawScope();
             }
 
             // ---- reveal ----
